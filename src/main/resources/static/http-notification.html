@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Hello WebSocket</title>
+    <link href="/css/main.css" rel="stylesheet">
+    <link href="/webjars/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+    <script src="/webjars/jquery/jquery.min.js"></script>
+    <script src="/webjars/sockjs-client/sockjs.min.js"></script>
+    <script src="/webjars/stomp-websocket/stomp.min.js"></script>
+</head>
+<body>
+<div id="main-content" class="container">
+    <div class="row">
+        <div class="col-md-6">
+            <form class="form-inline">
+                <div class="form-group">
+                    <label>Http Push Message </label>
+                </div>
+            </form>
+        </div>
+        <div class="col-md-6">
+            <form class="form-inline">
+                <div class="form-group">
+                    <input type="text" id="name" class="form-control" placeholder="send message ...">
+                </div>
+                <button id="send" class="btn btn-default" type="submit">Send</button>
+            </form>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-12">
+            <table id="conversation" class="table table-striped">
+                <thead>
+                <tr>
+                    <th>Receive Message</th>
+                </tr>
+                </thead>
+                <tbody id="receive">
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+    var socket = new SockJS('/chunppo-websocket');
+    stompClient = Stomp.over(socket);
+    stompClient.connect({}, function (frame) {
+        console.log('Connected: ' + frame);
+        stompClient.subscribe('/topic/subscribe', function (response) {
+            var message = JSON.parse(response.body).content;
+            $("#receive").append("<tr><td>" + message + "</td></tr>");
+        });
+
+        stompClient.subscribe('/topic/count/subscribe', function (response) {
+           alert(1);
+        });
+    });
+
+    function sendMessage() {
+        var parameters = {};
+        parameters.message = $("#name").val();
+        var url = "/http/sendMessage";
+        $.ajax({type:"GET", url:url, data:$.param(parameters), cache:false, async:false});
+        $("#name").val("");
+    }
+
+    $(function () {
+        $("form").on('submit', function (e) {
+            e.preventDefault();
+        });
+        $( "#send" ).click(function() { sendMessage(); });
+    });
+</script>
+</body>
+</html>
